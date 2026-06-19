@@ -50,6 +50,23 @@ if uploaded_file is not None:
         st.bar_chart({"Fraud": [sum(preds)], "Safe": [len(preds) - sum(preds)]})
 
     except Exception as e:
-        st.error(f"Error in prediction: {e}")
+        st.error(f"Error in prediction: {e}"
 
+
+st.markdown("### 🔹 Single Transaction Prediction")
+
+feature_input = st.text_area("Enter 30 features separated by commas")
+
+if st.button("Predict"):
+    try:
+        features = np.array([float(x.strip()) for x in feature_input.split(",")]).reshape(1, -1)
+        if features.shape[1] != model.n_features_in_:
+            st.error(f"Expected {model.n_features_in_} features, but got {features.shape[1]}.")
+        else:
+            prob = model.predict_proba(features)[0][1]
+            prediction = 1 if prob > 0.3 else 0
+            st.write("Fraud Probability:", prob)
+            st.write("Prediction:", "Fraud" if prediction == 1 else "Safe")
+    except ValueError:
+        st.error("Please enter only numeric values separated by commas.")
 
