@@ -50,7 +50,7 @@ if uploaded_file is not None:
         st.bar_chart({"Fraud": [sum(preds)], "Safe": [len(preds) - sum(preds)]})
 
     except Exception as e:
-        st.error(f"Error in prediction: {e}"
+        st.error(f"Error in prediction: {e}")
 
 
 st.markdown("### 🔹 Single Transaction Prediction")
