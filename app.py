@@ -10,8 +10,8 @@ st.title("Credit Card Fraud Detection")
 
 
     # Visualization
-    st.progress(int(prob * 100))
-    st.bar_chart({"Fraud Probability": [prob], "Safe Probability": [1 - prob]})
+st.progress(int(prob * 100))
+st.bar_chart({"Fraud Probability": [prob], "Safe Probability": [1 - prob]})
 
 # Batch prediction via CSV upload
 st.markdown("### 🔹 Batch Prediction (Upload CSV)")
