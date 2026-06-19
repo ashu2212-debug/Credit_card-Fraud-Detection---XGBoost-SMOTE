@@ -6,50 +6,110 @@ import pandas as pd
 # Load trained model
 model = joblib.load("fraud_xgboost_model.pkl")
 
-st.title("Credit Card Fraud Detection")
+st.set_page_config(
+    page_title="Credit Card Fraud Detection",
+    page_icon="💳",
+    layout="wide"
+)
 
+st.title("💳 Credit Card Fraud Detection System")
+st.write("Predict whether a transaction is Fraudulent or Safe.")
 
-    # Visualization
-st.progress(int(prob * 100))
-st.bar_chart({"Fraud Probability": [prob], "Safe Probability": [1 - prob]})
+# =========================
+# Batch Prediction Section
+# =========================
 
-# Batch prediction via CSV upload
-st.markdown("### 🔹 Batch Prediction (Upload CSV)")
-uploaded_file = st.file_uploader("Upload CSV file with features", type=["csv"])
+st.markdown("## 📂 Batch Prediction (CSV Upload)")
+
+uploaded_file = st.file_uploader(
+    "Upload CSV file containing transaction features",
+    type=["csv"]
+)
 
 if uploaded_file is not None:
-    data = pd.read_csv(uploaded_file)
-    st.write("Uploaded Data Preview:", data.head())
-
     try:
+        data = pd.read_csv(uploaded_file)
+
+        st.write("### Uploaded Data Preview")
+        st.dataframe(data.head())
+
         probs = model.predict_proba(data)[:, 1]
         preds = (probs > 0.3).astype(int)
 
         result_df = data.copy()
         result_df["Fraud Probability"] = probs
-        result_df["Prediction"] = preds
+        result_df["Prediction"] = np.where(preds == 1, "Fraud", "Safe")
 
-        st.write("Batch Prediction Results:", result_df.head())
-        st.bar_chart({"Fraud": [sum(preds)], "Safe": [len(preds) - sum(preds)]})
+        st.write("### Prediction Results")
+        st.dataframe(result_df.head())
+
+        fraud_count = int(sum(preds))
+        safe_count = int(len(preds) - fraud_count)
+
+        st.write("### Summary")
+        st.bar_chart({
+            "Fraud": [fraud_count],
+            "Safe": [safe_count]
+        })
 
     except Exception as e:
-        st.error(f"Error in prediction: {e}")
+        st.error(f"Prediction Error: {e}")
 
+st.divider()
 
-st.markdown("### 🔹 Single Transaction Prediction")
+# =========================
+# Single Prediction Section
+# =========================
 
-feature_input = st.text_area("Enter 30 features separated by commas")
+st.markdown("## 🔍 Single Transaction Prediction")
 
-if st.button("Predict"):
+feature_input = st.text_area(
+    f"Enter {model.n_features_in_} features separated by commas",
+    height=150
+)
+
+if st.button("Predict Transaction"):
+
     try:
-        features = np.array([float(x.strip()) for x in feature_input.split(",")]).reshape(1, -1)
+        features = np.array(
+            [float(x.strip()) for x in feature_input.split(",")]
+        ).reshape(1, -1)
+
         if features.shape[1] != model.n_features_in_:
-            st.error(f"Expected {model.n_features_in_} features, but got {features.shape[1]}.")
+            st.error(
+                f"Expected {model.n_features_in_} features but received {features.shape[1]}"
+            )
+
         else:
             prob = model.predict_proba(features)[0][1]
             prediction = 1 if prob > 0.3 else 0
-            st.write("Fraud Probability:", prob)
-            st.write("Prediction:", "Fraud" if prediction == 1 else "Safe")
+
+            st.subheader("Prediction Result")
+
+            st.write(
+                f"**Fraud Probability:** {prob:.4f}"
+            )
+
+            if prediction == 1:
+                st.error("🚨 Fraudulent Transaction Detected")
+            else:
+                st.success("✅ Safe Transaction")
+
+            st.markdown("### Probability Visualization")
+
+            st.progress(min(int(prob * 100), 100))
+
+            chart_df = pd.DataFrame({
+                "Probability": [prob, 1 - prob]
+            }, index=["Fraud", "Safe"])
+
+            st.bar_chart(chart_df)
+
     except ValueError:
-        st.error("Please enter only numeric values separated by commas.")
+        st.error(
+            "Please enter only numeric values separated by commas."
+        )
+
+    except Exception as e:
+        st.error(f"Error: {e}")
 
