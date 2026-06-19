@@ -8,23 +8,6 @@ model = joblib.load("fraud_xgboost_model.pkl")
 
 st.title("Credit Card Fraud Detection")
 
-st.markdown("### 🔹 Single Transaction Prediction")
-
-# Interactive widgets instead of text input
-amount = st.number_input("Transaction Amount", min_value=0.0, step=10.0)
-time = st.number_input("Transaction Time (seconds of day)", min_value=0, max_value=86400, step=1000)
-location = st.selectbox("Location (encoded)", [0, 1, 2, 3])
-merchant = st.selectbox("Merchant Category (encoded)", [1, 2, 3, 4])
-device = st.selectbox("Device Type (encoded)", [1, 2])
-
-features = np.array([amount, time, location, merchant, device]).reshape(1, -1)
-
-if st.button("Predict Single Transaction"):
-    prob = model.predict_proba(features)[0][1]
-    prediction = 1 if prob > 0.3 else 0
-
-    st.write("Fraud Probability:", prob)
-    st.write("Prediction:", "Fraud" if prediction == 1 else "Safe")
 
     # Visualization
     st.progress(int(prob * 100))
