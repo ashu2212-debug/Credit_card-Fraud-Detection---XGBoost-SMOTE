@@ -1,31 +1,23 @@
-print("HELLO FROM APP")
-
-from flask import Flask, request, jsonify
+import streamlit as st
 import joblib
 import numpy as np
 
-app = Flask(__name__)
-
 model = joblib.load("fraud_xgboost_model.pkl")
 
-@app.route("/")
-def home():
-    return "Credit card fraud detection API running"
+st.title("Credit Card Fraud Detection")
 
-@app.route("/predict", methods=["POST"])
-def predict():
-    data = request.json
+feature_input = st.text_input(
+    "Enter features separated by commas"
+)
 
-    features = np.array(data["features"]).reshape(1, -1)
+if st.button("Predict"):
+    features = np.array(
+        [float(x) for x in feature_input.split(",")]
+    ).reshape(1, -1)
 
-    probability = model.predict_proba(features)[0][1]
+    prob = model.predict_proba(features)[0][1]
 
-    prediction = 1 if probability > 0.3 else 0
+    prediction = 1 if prob > 0.3 else 0
 
-    return jsonify({
-        "fraud_probability": float(probability),
-        "prediction": int(prediction)
-    })
-
-if __name__ == "__main__":
-    app.run(debug=True)
+    st.write("Fraud Probability:", prob)
+    st.write("Prediction:", prediction)
